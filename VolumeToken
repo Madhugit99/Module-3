@@ -1,0 +1,31 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract VolumeToken is ERC20, Ownable {
+
+    constructor() ERC20("VolumeToken", "VOL") Ownable(msg.sender) {
+        _mint(msg.sender, 1000000000 * 10 ** decimals());
+    }
+    function mintTokens(address beneficiary, uint256 concentration) external onlyOwner {
+        require(concentration > 0, "VolumeToken: Concentration must be greater than zero");
+        if (_msgSender() != beneficiary) {
+            require(beneficiary != address(0), "VolumeToken: Invalid beneficiary address");
+            _transfer(_msgSender(), beneficiary, concentration);
+        } else {
+            _mint(beneficiary, concentration);
+        }
+    }
+    function burnTokens(uint256 concentration) external {
+        require(concentration > 0 && concentration <= balanceOf(_msgSender()), "VolumeToken: Invalid concentration amount for burning");
+        _burn(_msgSender(), concentration);
+    }
+    function transfer(address to, uint256 concentration) public override returns (bool) {
+        require(to != address(0), "VolumeToken: Invalid transfer to address");
+        require(concentration > 0 && concentration <= balanceOf(_msgSender()), "VolumeToken: Invalid transfer concentration amount");
+        _transfer(_msgSender(), to, concentration);
+        return true;
+    }
+}
